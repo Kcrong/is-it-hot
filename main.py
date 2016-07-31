@@ -1,3 +1,5 @@
+from time import localtime, strftime
+
 from pydivert.windivert import *
 
 with open('mal_site_edited.txt', 'r') as f:
@@ -12,6 +14,7 @@ class Filter:
     def __init__(self, filter_obj):
         self.driver = WinDivert(WINDIVERT_DLL_PATH)  # WinDivertOpen
         self.filter = filter_obj
+        self.logfile = open('log.txt', 'a')
 
     @staticmethod
     def find_host(payload):
@@ -52,12 +55,12 @@ class Filter:
                 # if payload?
                 if len(captured.payload) != 0:
                     host = self.find_host(captured.payload)
-
+                    time = strftime("%x %X", localtime())
                     if host and not self.filter_host(host):
-                        print("Hello~ %s" % host)
+                        self.logfile.write("[%s] %s is allowed" % (time, host))
                         handle.send(raw, meta)
                     else:
-                        print("Bye~ %s" % host)
+                        self.logfile.write("[%s] %s is blocked" % (time, host))
 
                 # Not Payload, Just go....
                 else:
