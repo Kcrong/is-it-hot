@@ -47,24 +47,18 @@ class Filter:
         """
         print("Running...")
         print("Start to filtering")
-        with Handle(self.driver, "outbound and tcp.DstPort == 80", priority=1000) as handle:
+        with Handle(self.driver, "outbound and tcp.DstPort == 80 and tcp.PayloadLength > 0", priority=1000) as handle:
             while True:
                 raw, meta = handle.recv()
                 captured = self.driver.parse_packet(raw)
 
-                # if payload?
-                if len(captured.payload) != 0:
-                    host = self.find_host(captured.payload)
-                    time = strftime("%x %X", localtime())
-                    if host and not self.filter_host(host):
-                        self.logfile.write("[%s] %s is allowed" % (time, host))
-                        handle.send(raw, meta)
-                    else:
-                        self.logfile.write("[%s] %s is blocked" % (time, host))
-
-                # Not Payload, Just go....
-                else:
+                host = self.find_host(captured.payload)
+                time = strftime("%x %X", localtime())
+                if host and not self.filter_host(host):
+                    self.logfile.write("[%s] %s is allowed" % (time, host))
                     handle.send(raw, meta)
+                else:
+                    self.logfile.write("[%s] %s is blocked" % (time, host))
 
 
 class AhoCorasickNode:
